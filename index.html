@@ -13,33 +13,32 @@
   }
   #scene{position:relative; width:100vw; height:100vh; min-height:560px}
 
-  /* Pages */
+  /* Page containers */
   .page{
-    position:absolute; inset:0; display:grid; place-items:center;
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
     opacity:0; transform:scale(.985); pointer-events:none;
     transition:opacity .55s ease, transform .6s cubic-bezier(.23,1.2,.38,.99);
+    padding:16px 16px calc(26px + env(safe-area-inset-bottom));
+    gap:14px;
   }
   .page.active{opacity:1; transform:scale(1); pointer-events:auto}
 
-  /* ---- Global footer hint (always visible on mobile) ---- */
-  #hint{
-    position:fixed;
-    left:16px; right:16px;
-    bottom:calc(10px + env(safe-area-inset-bottom));
-    text-align:center; z-index:60; pointer-events:none;
-    font-size:clamp(12px,3.2vw,14px); letter-spacing:.2px;
-    color:#5b4310; opacity:.9;
-    background:rgba(255,255,255,.65);
+  /* Local hint that appears AFTER the main block on each page */
+  .hint-local{
+    pointer-events:none; /* don't block taps */
+    font-size:clamp(12px,3.2vw,14px);
+    color:#5b4310; opacity:.92;
+    background:rgba(255,255,255,.7);
     padding:.55rem .9rem; border-radius:999px;
     box-shadow:0 6px 24px rgba(0,0,0,.08);
     backdrop-filter:saturate(120%) blur(6px);
   }
 
-  /* ===== Save-the-Date card (centered) ===== */
+  /* Save-the-Date box (centered) */
   .dateBadge{
     inline-size:min(84vw, 520px);
     aspect-ratio: 16/10;
-    margin:0 auto;
     display:grid; place-items:center; gap:10px; text-align:center;
     background:
       radial-gradient(120% 85% at 50% -10%, #ffffff, #ffffff00 70%),
@@ -57,31 +56,29 @@
   .year{font-weight:800; color:#6b5318}
   .bottom{font-size:14px; opacity:.85; margin-top:4px}
 
-  /* Small card boxes (same sizing you wanted) */
+  /* Small card boxes (your sizing) */
   .cardbox{
-    position:absolute; left:50%; top:56%;
-    transform:translate(-50%,0) scale(.70) rotate(-1deg);
-    width:auto; height:auto; max-width:85vw; max-height:62vh; opacity:0;
+    transform:scale(.70) rotate(-1deg);
+    max-width:85vw; max-height:62vh; opacity:0;
     padding:5px; background:#fff; border-radius:16px; border:2px solid #dabb6199;
     box-shadow:0 11px 24px #d4b35222, 0 6px 26px #d4b35244;
     display:flex; align-items:center; justify-content:center; box-sizing:border-box;
-    transition:opacity 1.1s cubic-bezier(.71,-0.14,.45,1.3),
-               transform 1.1s cubic-bezier(.23,1.2,.38,.99),
-               top 1s cubic-bezier(.23,1.2,.38,.99);
+    transition:opacity 1.1s cubic-bezier(.71,-0.14,.45,1.3), transform 1.1s cubic-bezier(.23,1.2,.38,.99);
   }
-  .cardbox.visible{opacity:1; top:50%; transform:translate(-50%,-50%) scale(1) rotate(.3deg); animation:pop .45s 1 cubic-bezier(.53,1.62,.63,.89)}
+  .cardbox.visible{opacity:1; transform:scale(1) rotate(.3deg); animation:pop .45s 1 cubic-bezier(.53,1.62,.63,.89)}
   .cardbox img{display:block; max-width:80vw; max-height:57vh; width:auto; height:auto; border-radius:14px; box-shadow:0 0 18px #fbeecd33}
   @media (max-width:800px){ .cardbox{max-width:97vw;} .cardbox img{max-width:94vw; max-height:41vh;} }
-  @keyframes pop{0%{transform:translate(-50%,-70%) scale(.88)}70%{transform:translate(-50%,-50%) scale(1.08)}100%{transform:translate(-50%,-50%) scale(1)}}
+  @keyframes pop{0%{transform:scale(.88)}70%{transform:scale(1.08)}100%{transform:scale(1)}}
 
-  /* Confetti/hearts */
+  /* Confetti/hearts layer */
   .confetti{position:fixed; inset:0; pointer-events:none; z-index:22}
   .heart{position:absolute; font-size:14px; line-height:1; filter:drop-shadow(0 1px 1px rgba(0,0,0,.2))}
 </style>
 </head>
 <body>
   <div id="scene" aria-label="Tap to continue">
-    <!-- Page 1: Save the Date -->
+
+    <!-- PAGE 1 -->
     <section class="page active" data-page="1">
       <div class="dateBadge">
         <div class="stack">
@@ -95,51 +92,42 @@
           <div class="bottom">Reception 06:30 pm • Dinner 07:30 pm</div>
         </div>
       </div>
+      <div class="hint-local">Tap to continue • 1/3</div>
     </section>
 
-    <!-- Page 2: First image (cover) -->
+    <!-- PAGE 2 -->
     <section class="page" data-page="2">
       <div class="cardbox" id="coverBox">
         <img src="2ed1a3f5-7912-4d8c-86f7-6c94ff6c5377.jpg" alt="Cover"/>
       </div>
+      <div class="hint-local">Tap to open the invitation • 2/3</div>
     </section>
 
-    <!-- Page 3: Main card -->
+    <!-- PAGE 3 -->
     <section class="page" data-page="3">
       <div class="cardbox" id="mainBox">
         <img src="33333.jpeg" alt="Invitation Card"/>
       </div>
+      <div class="hint-local">Tap to replay • 3/3</div>
     </section>
 
-    <!-- Global layers -->
+    <!-- Global confetti/hearts layer -->
     <div class="confetti" id="confetti"></div>
   </div>
-
-  <!-- Fixed footer hint (always visible, updates per step) -->
-  <div id="hint">Tap to continue • 1/3</div>
 
 <script>
   const pages = [...document.querySelectorAll('.page')];
   const confettiLayer = document.getElementById('confetti');
   const coverBox = document.getElementById('coverBox');
   const mainBox  = document.getElementById('mainBox');
-  const hint     = document.getElementById('hint');
   let page = 1;
-
-  const hints = {
-    1: 'Tap to continue • 1/3',
-    2: 'Tap to open the invitation • 2/3',
-    3: 'Tap to replay • 3/3'
-  };
-  function setHint(n){ hint.textContent = hints[n] || '' }
 
   function show(n){
     page = n;
-    setHint(page);
     pages.forEach(p => p.classList.toggle('active', +p.dataset.page === page));
-    if(page===1){ rain(220, 1400); }
-    if(page===2){ requestAnimationFrame(()=>coverBox.classList.add('visible')); rain(240, 1600); }
-    if(page===3){ requestAnimationFrame(()=>mainBox.classList.add('visible'));  rain(260, 1800); }
+    if(page===1){ rain(200, 1300); }
+    if(page===2){ requestAnimationFrame(()=>coverBox.classList.add('visible')); rain(220, 1500); }
+    if(page===3){ requestAnimationFrame(()=>mainBox.classList.add('visible'));  rain(240, 1600); }
   }
 
   function next(){
@@ -152,15 +140,15 @@
     }
   }
 
-  // Make the whole screen the tap target
-  document.getElementById('scene').addEventListener('click', next);
-  // iOS sometimes ignores click; also listen for touchend
-  document.getElementById('scene').addEventListener('touchend', (e)=>{ e.preventDefault(); next(); }, {passive:false});
+  // Whole screen is the tap target (click + touch)
+  const sc = document.getElementById('scene');
+  sc.addEventListener('click', next);
+  sc.addEventListener('touchend', (e)=>{ e.preventDefault(); next(); }, {passive:false});
 
-  rain(220, 1400); // start on page 1
+  rain(200, 1300); // initial
 
-  /* Confetti + hearts (reduced amount) */
-  function rain(count=220, duration=1500){
+  /* Confetti + hearts (reduced) */
+  function rain(count=200, duration=1300){
     const colors = ['#FFD700','#F6D366','#FFB4A2','#ffc561','#eae2b7','#e9c46a','#be94a7'];
     const heartColors = ['#ff6b6b','#ff8787','#ff4d6d'];
     const start = performance.now();
